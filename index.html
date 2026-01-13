@@ -2,141 +2,123 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Quiz Triết học Mác – Lênin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thi trắc nghiệm Triết học Mác – Lênin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{
-  font-family: Arial, sans-serif;
-  background:#f4f6f8;
-  padding:20px;
+body{margin:0;font-family:Segoe UI,Arial;background:#eef2f7}
+.container{max-width:950px;margin:40px auto;padding:20px}
+.card{background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.1);padding:25px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.progress{height:8px;background:#ddd;border-radius:4px;overflow:hidden;width:60%}
+.progress-bar{height:100%;background:#2563eb;width:0%}
+h2{font-size:20px}
+.answer button{
+ width:100%;padding:12px;margin:6px 0;border-radius:8px;
+ border:1px solid #ddd;background:#f9fafb;font-size:15px;cursor:pointer
 }
-.quiz{
-  background:#fff;
-  padding:20px;
-  border-radius:10px;
-  max-width:800px;
-  margin:auto;
-}
-h2{font-size:20px;}
-button{
-  width:100%;
-  padding:12px;
-  margin:6px 0;
-  font-size:16px;
-}
-.correct{background:#4caf50;color:#fff;}
-.wrong{background:#f44336;color:#fff;}
-.nav{
-  display:flex;
-  gap:10px;
-  margin-top:10px;
-}
-.hidden{display:none;}
+.answer button:hover{background:#eef2ff}
+.correct{background:#16a34a;color:#fff}
+.wrong{background:#dc2626;color:#fff}
+.nav{display:flex;justify-content:space-between;margin-top:15px}
+.nav button{padding:10px 22px;border:none;border-radius:8px;font-size:15px;cursor:pointer}
+.prev{background:#e5e7eb}
+.next{background:#2563eb;color:#fff}
+.result{font-size:22px;text-align:center;font-weight:bold}
+.table{margin-top:20px}
+.row{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee}
+.ok{color:#16a34a;font-weight:bold}
+.no{color:#dc2626;font-weight:bold}
 </style>
 </head>
 <body>
 
-<div class="quiz">
-  <h2 id="question"></h2>
-  <div id="answers"></div>
-
-  <div class="nav">
-    <button onclick="prevQuestion()">⬅ Câu trước</button>
-    <button onclick="nextQuestion()">Câu tiếp ➡</button>
+<div class="container">
+<div class="card">
+  <div class="header">
+    <div id="counter"></div>
+    <div class="progress"><div class="progress-bar" id="bar"></div></div>
   </div>
 
-  <h3 id="result" class="hidden"></h3>
+  <h2 id="question"></h2>
+  <div class="answer" id="answers"></div>
+
+  <div class="nav">
+    <button class="prev" onclick="prev()">⬅ Trước</button>
+    <button class="next" onclick="next()">Tiếp ➡</button>
+  </div>
+
+  <div id="result" class="result"></div>
+  <div id="detail" class="table"></div>
+</div>
 </div>
 
 <script>
 const quiz = [
-  {
-    q:"Câu 1: Triết học ra đời sớm nhất ở đâu?",
-    a:[
-      ["Ấn Độ, Trung Quốc, Hy Lạp",false],
-      ["Ai Cập, Hy Lạp, Ấn Độ",false],
-      ["Ấn Độ, Châu Phi, Nga",false],
-      ["Ai Cập, Ấn Độ, Trung Quốc",true]
-    ]
-  },
-  {
-    q:"Câu 2: Triết học ra đời từ đâu?",
-    a:[
-      ["Từ thực tiễn, do nhu cầu của thực tiễn",true],
-      ["Từ sự suy tư cá nhân",false],
-      ["Từ sự sáng tạo của nhà tư tưởng",false],
-      ["Từ ý muốn chủ quan",false]
-    ]
-  },
-  {
-    q:"Câu 3: Triết học Mác – Lênin là gì?",
-    a:[
-      ["Khoa học nghiên cứu con người",false],
-      ["Thế giới quan và phương pháp luận khoa học, cách mạng",true],
-      ["Hệ thống quan điểm duy vật biện chứng",true],
-      ["Khoa học nghiên cứu quy luật tự nhiên",false]
-    ]
-  }
-  // 👉 có thể thêm tiếp các câu 4 → 29 cùng mẫu
+ {q:"Câu 1: Triết học ra đời sớm nhất ở đâu?",a:[
+  ["Ấn Độ, Trung Quốc, Hy Lạp",0],
+  ["Ai Cập, Hy Lạp, Ấn Độ",0],
+  ["Ấn Độ, Châu Phi, Nga",0],
+  ["Ai Cập, Ấn Độ, Trung Quốc",1]
+ ]},
+ {q:"Câu 2: Triết học ra đời từ đâu?",a:[
+  ["Từ thực tiễn, do nhu cầu của thực tiễn",1],
+  ["Từ suy tư cá nhân",0],
+  ["Từ sáng tạo của nhà tư tưởng",0],
+  ["Từ ý muốn chủ quan",0]
+ ]}
+ // 👉 (giữ nguyên 29 câu như bạn đã có)
 ];
 
-let current=0;
-let score=0;
-let answered=[];
+let i=0,score=0,done=[],history=[];
 
-function loadQuestion(){
-  document.getElementById("result").classList.add("hidden");
-  const q=quiz[current];
-  document.getElementById("question").innerText=q.q;
-  const ans=document.getElementById("answers");
-  ans.innerHTML="";
-  q.a.forEach((item,i)=>{
-    const btn=document.createElement("button");
-    btn.innerText=item[0];
-    btn.onclick=()=>selectAnswer(btn,item[1]);
-    ans.appendChild(btn);
-  });
+function load(){
+ document.getElementById("counter").innerText=`Câu ${i+1}/${quiz.length}`;
+ document.getElementById("bar").style.width=((i+1)/quiz.length*100)+"%";
+ document.getElementById("question").innerText=quiz[i].q;
+ document.getElementById("result").innerText="";
+ const a=document.getElementById("answers");
+ a.innerHTML="";
+ quiz[i].a.forEach(x=>{
+  const b=document.createElement("button");
+  b.innerText=x[0];
+  b.onclick=()=>choose(b,x[1]);
+  a.appendChild(b);
+ });
 }
 
-function selectAnswer(btn,correct){
-  if(answered[current]) return;
-  answered[current]=true;
-  if(correct){
-    btn.className="correct";
-    score++;
-  }else{
-    btn.className="wrong";
-  }
-  document.querySelectorAll("#answers button")
-    .forEach(b=>b.disabled=true);
+function choose(btn,ok){
+ if(done[i])return;
+ done[i]=true;
+ history[i]=ok;
+ if(ok){btn.className="correct";score++}
+ else btn.className="wrong";
+ document.querySelectorAll(".answer button").forEach(b=>b.disabled=true);
 }
 
-function nextQuestion(){
-  if(current<quiz.length-1){
-    current++;
-    loadQuestion();
-  }else{
-    showResult();
-  }
+function next(){
+ if(i<quiz.length-1){i++;load();}
+ else showResult();
 }
-
-function prevQuestion(){
-  if(current>0){
-    current--;
-    loadQuestion();
-  }
-}
+function prev(){if(i>0){i--;load();}}
 
 function showResult(){
-  document.getElementById("question").innerText="🎉 Hoàn thành bài thi";
-  document.getElementById("answers").innerHTML="";
-  const r=document.getElementById("result");
-  r.innerText=`Bạn đúng ${score}/${quiz.length} câu`;
-  r.classList.remove("hidden");
+ document.getElementById("question").innerText="🎉 Hoàn thành bài thi";
+ document.getElementById("answers").innerHTML="";
+ document.getElementById("result").innerText=`Bạn đúng ${score}/${quiz.length} câu`;
+ const d=document.getElementById("detail");
+ d.innerHTML="<h3>📊 Thống kê từng câu</h3>";
+ quiz.forEach((q,idx)=>{
+  d.innerHTML+=`
+   <div class="row">
+    <div>Câu ${idx+1}</div>
+    <div class="${history[idx]?'ok':'no'}">
+     ${history[idx]?'✅ Đúng':'❌ Sai'}
+    </div>
+   </div>`;
+ });
 }
 
-loadQuestion();
+load();
 </script>
-
 </body>
 </html>
