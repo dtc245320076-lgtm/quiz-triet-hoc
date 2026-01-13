@@ -1,39 +1,141 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Quiz Triết học</title>
-  <style>
-    body { font-family: Arial; background: #f4f6f8; padding: 20px; }
-    .quiz { background: #fff; padding: 20px; border-radius: 8px; max-width: 800px; margin: auto; }
-    h2 { color: #333; }
-    button { margin: 5px 0; padding: 10px; width: 100%; }
-    .correct { background: #4caf50; color: #fff; }
-    .wrong { background: #f44336; color: #fff; }
-  </style>
+<meta charset="UTF-8">
+<title>Quiz Triết học Mác – Lênin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#f4f6f8;
+  padding:20px;
+}
+.quiz{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  max-width:800px;
+  margin:auto;
+}
+h2{font-size:20px;}
+button{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  font-size:16px;
+}
+.correct{background:#4caf50;color:#fff;}
+.wrong{background:#f44336;color:#fff;}
+.nav{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+.hidden{display:none;}
+</style>
 </head>
 <body>
 
 <div class="quiz">
-  <h2>Câu 1: Triết học ra đời sớm nhất ở đâu?</h2>
-  <button onclick="check(this,false)">A. Ấn Độ, Trung Quốc, Hy Lạp</button>
-  <button onclick="check(this,false)">B. Ai Cập, Hy Lạp, Ấn Độ</button>
-  <button onclick="check(this,false)">C. Ấn Độ, Châu Phi, Nga</button>
-  <button onclick="check(this,true)">D. Ai Cập, Ấn Độ, Trung Quốc</button>
+  <h2 id="question"></h2>
+  <div id="answers"></div>
+
+  <div class="nav">
+    <button onclick="prevQuestion()">⬅ Câu trước</button>
+    <button onclick="nextQuestion()">Câu tiếp ➡</button>
+  </div>
+
+  <h3 id="result" class="hidden"></h3>
 </div>
 
 <script>
-function check(btn, correct) {
-  if (correct) {
-    btn.className = "correct";
-    btn.innerHTML += " ✔ Đúng";
-  } else {
-    btn.className = "wrong";
-    btn.innerHTML += " ✘ Sai";
+const quiz = [
+  {
+    q:"Câu 1: Triết học ra đời sớm nhất ở đâu?",
+    a:[
+      ["Ấn Độ, Trung Quốc, Hy Lạp",false],
+      ["Ai Cập, Hy Lạp, Ấn Độ",false],
+      ["Ấn Độ, Châu Phi, Nga",false],
+      ["Ai Cập, Ấn Độ, Trung Quốc",true]
+    ]
+  },
+  {
+    q:"Câu 2: Triết học ra đời từ đâu?",
+    a:[
+      ["Từ thực tiễn, do nhu cầu của thực tiễn",true],
+      ["Từ sự suy tư cá nhân",false],
+      ["Từ sự sáng tạo của nhà tư tưởng",false],
+      ["Từ ý muốn chủ quan",false]
+    ]
+  },
+  {
+    q:"Câu 3: Triết học Mác – Lênin là gì?",
+    a:[
+      ["Khoa học nghiên cứu con người",false],
+      ["Thế giới quan và phương pháp luận khoa học, cách mạng",true],
+      ["Hệ thống quan điểm duy vật biện chứng",true],
+      ["Khoa học nghiên cứu quy luật tự nhiên",false]
+    ]
   }
-  let buttons = btn.parentNode.querySelectorAll("button");
-  buttons.forEach(b => b.disabled = true);
+  // 👉 có thể thêm tiếp các câu 4 → 29 cùng mẫu
+];
+
+let current=0;
+let score=0;
+let answered=[];
+
+function loadQuestion(){
+  document.getElementById("result").classList.add("hidden");
+  const q=quiz[current];
+  document.getElementById("question").innerText=q.q;
+  const ans=document.getElementById("answers");
+  ans.innerHTML="";
+  q.a.forEach((item,i)=>{
+    const btn=document.createElement("button");
+    btn.innerText=item[0];
+    btn.onclick=()=>selectAnswer(btn,item[1]);
+    ans.appendChild(btn);
+  });
 }
+
+function selectAnswer(btn,correct){
+  if(answered[current]) return;
+  answered[current]=true;
+  if(correct){
+    btn.className="correct";
+    score++;
+  }else{
+    btn.className="wrong";
+  }
+  document.querySelectorAll("#answers button")
+    .forEach(b=>b.disabled=true);
+}
+
+function nextQuestion(){
+  if(current<quiz.length-1){
+    current++;
+    loadQuestion();
+  }else{
+    showResult();
+  }
+}
+
+function prevQuestion(){
+  if(current>0){
+    current--;
+    loadQuestion();
+  }
+}
+
+function showResult(){
+  document.getElementById("question").innerText="🎉 Hoàn thành bài thi";
+  document.getElementById("answers").innerHTML="";
+  const r=document.getElementById("result");
+  r.innerText=`Bạn đúng ${score}/${quiz.length} câu`;
+  r.classList.remove("hidden");
+}
+
+loadQuestion();
 </script>
 
 </body>
